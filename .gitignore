@@ -1,3 +1,291 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Лучшие 6 месяцов  — корзинка и поздравление</title>
+  <style>
+    :root{
+      --bg1:#0b0710;
+      --bg2:#2a0620;
+      --card:#121018;
+      --accent:#ff6b9a;
+      --accent2:#ff2d6f;
+      --muted:#c9bcd0;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#fff;background:linear-gradient(160deg,var(--bg1),var(--bg2));-webkit-tap-highlight-color:transparent}
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:18px}
+    .card{width:980px;max-width:100%;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:16px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.03)}
+
+    header{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ffb3d0);display:grid;place-items:center;font-weight:800;color:#2b002b}
+    h1{margin:0;font-size:18px}
+    p.lead{margin:6px 0 0;color:var(--muted);font-size:13px}
+
+    .stage{margin-top:12px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);position:relative;border:1px solid rgba(255,255,255,0.02)}
+    .hud{display:flex;gap:8px;align-items:center;padding:10px}
+    .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;cursor:pointer;color:#fff;font-weight:700}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#2b002b;border:0}
+    .info{margin-left:auto;color:var(--muted);font-weight:700}
+
+    /* game canvas */
+    #game{width:100%;height:520px;background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.02));position:relative;touch-action:none}
+    @media (max-width:720px){#game{height:calc(100vh - 220px)}}
+
+    /* basket */
+    .basket{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:110px;height:68px;border-radius:18px;background:linear-gradient(180deg,#2b001f,#3a001f);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,0.6);border:2px solid rgba(255,255,255,0.03)}
+    .basket::before{content:'';position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:60px;height:20px;border-radius:10px;background:linear-gradient(90deg,#ff8fb8,#ff2d6f);opacity:0.12}
+
+    .heart-small{position:absolute;width:42px;height:42px;pointer-events:auto}
+
+    /* modal */
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);visibility:hidden;opacity:0;transition:opacity .18s, visibility .18s;z-index:1200}
+    .modal.show{visibility:visible;opacity:1}
+    .modal-card{background:linear-gradient(180deg,#fff,#ffeef7);color:#2b002b;padding:22px;border-radius:18px;max-width:520px;width:92%;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,0.5)}
+    .big-heart-btn{display:inline-grid;place-items:center;width:160px;height:160px;border-radius:999px;background:linear-gradient(180deg,#ff7fb0,#ff2d6f);color:#2b002b;font-weight:900;font-size:22px;border:6px solid rgba(255,255,255,0.55);box-shadow:0 12px 40px rgba(255,80,150,0.12);cursor:pointer}
+    .big-heart-btn.pulse{animation:beat 900ms infinite}
+    @keyframes beat{0%{transform:scale(1)}50%{transform:scale(1.07)}100%{transform:scale(1)}}
+
+    .close{margin-top:10px}
+
+    footer{margin-top:12px;text-align:center;color:var(--muted);font-size:13px}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" style="width:100%">
+      <header>
+        <div class="logo">6M</div>
+        <div>
+          <h1>Любимая мяу — лови сердца</h1>
+          <p class="lead">Управляй корзинкой сенсорно, лови падающие сердца. Цель: 28 очков.</p>
+        </div>
+      </header>
+
+      <div class="stage">
+        <div class="hud">
+          <button class="btn primary" id="startBtn">Начать</button>
+          <button class="btn" id="restartBtn">Сброс</button>
+          <div class="info">Очки: <span id="score">0</span> / <strong>28</strong></div>
+          <div class="info">Жизни: <span id="lives">3</span></div>
+        </div>
+
+        <div id="game">
+          <!-- falling hearts and basket live here -->
+          <canvas id="fxCanvas" style="position:absolute;inset:0;pointer-events:none;z-index:900"></canvas>
+          <div id="basket" class="basket">🧺</div>
+        </div>
+      </div>
+
+      <footer>Люблююю тебяяя очень сильнооо моя любимая сладенькая.</footer>
+    </div>
+  </div>
+
+  <!-- modal final -->
+  <div class="modal" id="winModal">
+    <div class="modal-card">
+      <h2 id="winTitle">Поздравляю!</h2>
+      <p id="winSub">Ты поймала 28 сердец — Умница моя ❤️</p>
+      <div style="margin:18px 0">
+        <button id="pressHeart" class="big-heart-btn pulse">ЖМИ ❤️</button>
+      </div>
+      <button class="btn close" id="closeWin">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- secret overlay -->
+  <div id="secretOverlay" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(11,7,16,0.85),rgba(42,6,32,0.85));z-index:1300;color:#fff;flex-direction:column;text-align:center;padding:20px">
+    <div style="font-size:36px;font-weight:900;color:#ffb3d0;">❤️ Люблю тебя, сладенькая ❤️</div>
+    <div style="margin-top:10px;color:#ffd4e8;font-size:18px">Люблю тебя безумно и вот мы вместе уже 6 месяцов люблю за то что ты есть вместе мы прошли дохуя интересного соры и тд но все ровно я тебя буду любить всегда всегда всегда потому что ты все что у меня есть ценное в этом конченым мире и мечтаю что бы мы сьездились и завели котенка.</div>
+  </div>
+<audio id="meowSound" preload="auto">
+  <source src="data:audio/mp3;base64,//uQxAAAAAADhCSU0D..." type="audio/mp3">
+</audio>
+
+
+  <script>
+    
+    // --- settings ---
+    const TARGET = 28;
+    const START_LIVES = 3;
+    const SPAWN_INTERVAL = 800; // ms
+
+    const gameEl = document.getElementById('game');
+    const basket = document.getElementById('basket');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.getElementById('lives');
+    const fxCanvas = document.getElementById('fxCanvas');
+    const winModal = document.getElementById('winModal');
+    const pressHeart = document.getElementById('pressHeart');
+    const closeWin = document.getElementById('closeWin');
+    const secretOverlay = document.getElementById('secretOverlay');
+
+    let score = 0; let lives = START_LIVES;
+    let running = false; let spawnTimer = null; let hearts = [];
+
+    // canvas for small fx
+    const ctx = fxCanvas.getContext('2d');
+    function resizeCanvas(){ fxCanvas.width = gameEl.clientWidth; fxCanvas.height = gameEl.clientHeight; }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+    // basket control (touch and mouse)
+    let basketX = gameEl.clientWidth/2; // center
+    function setBasketX(x){
+      const min = 24; const max = gameEl.clientWidth - 24 - basket.clientWidth;
+      let clamped = Math.max(min, Math.min(x - basket.clientWidth/2, max));
+      basket.style.left = clamped + 'px';
+      basketX = clamped + basket.clientWidth/2;
+    }
+    // init position
+    setBasketX(gameEl.clientWidth/2 - basket.clientWidth/2);
+
+    // touch handlers
+    let activePointer = null;
+    function pointerMove(clientX){
+      const rect = gameEl.getBoundingClientRect();
+      setBasketX(clientX - rect.left);
+    }
+    gameEl.addEventListener('touchstart', (e)=>{ e.preventDefault(); const t = e.touches[0]; activePointer = t.identifier; pointerMove(t.clientX); });
+    gameEl.addEventListener('touchmove', (e)=>{ e.preventDefault(); const t = e.touches[0]; if(!t) return; pointerMove(t.clientX); });
+    gameEl.addEventListener('touchend', (e)=>{ activePointer = null; });
+    // allow mouse for desktop
+    let mouseDown = false;
+    gameEl.addEventListener('mousedown',(e)=>{ mouseDown=true; pointerMove(e.clientX); });
+    window.addEventListener('mousemove',(e)=>{ if(mouseDown) pointerMove(e.clientX); });
+    window.addEventListener('mouseup',()=>mouseDown=false);
+
+    // create heart element
+    function spawnHeart(){
+      const el = document.createElement('div');
+      el.className = 'heart-small';
+      const size = 38 + Math.random()*26; // 38..64
+      el.style.width = size+'px'; el.style.height = size+'px';
+      const left = Math.random()*(gameEl.clientWidth - size - 20) + 10;
+      el.style.left = left + 'px'; el.style.top = '-60px';
+      el.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="M12 21s-7-4.35-9-6.6C-0.24 10.96 3.16 6 7 6c1.74 0 3.41.81 4.5 2.09C12.59 6.81 14.26 6 16 6c3.84 0 7.24 4.96 4 8.4C19 16.65 12 21 12 21z" fill="url(#g)"/><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ff8fb8"/><stop offset="1" stop-color="#ff2d6f"/></linearGradient></defs></svg>`;
+      gameEl.appendChild(el);
+      hearts.push({el, x:left, y:-60, vy:1+Math.random()*1.6, size});
+
+      // auto remove after some time
+      setTimeout(()=>{ if (gameEl.contains(el)){ el.remove(); hearts = hearts.filter(h=>h.el!==el); } }, 16000);
+    }
+
+    // spawn loop
+    function spawnLoop(){
+      if(!running) return;
+      spawnHeart();
+      spawnTimer = setTimeout(spawnLoop, SPAWN_INTERVAL * (0.7 + Math.random()*0.9));
+    }
+
+    // main loop
+    function step(){
+      if(!running) return;
+      // physics
+      for(let i=hearts.length-1;i>=0;i--){
+        const h = hearts[i];
+        h.vy += 0.04; h.y += h.vy;
+        h.el.style.top = h.y + 'px';
+        // simple horizontal sway
+        h.x += Math.sin(h.y/60 + i) * 0.8;
+        h.el.style.left = h.x + 'px';
+
+        // collision with basket
+        const rectB = basket.getBoundingClientRect();
+        const rectG = gameEl.getBoundingClientRect();
+        const heartRect = h.el.getBoundingClientRect();
+        const centerX = heartRect.left + heartRect.width/2;
+        const centerY = heartRect.top + heartRect.height/2;
+        if(centerY > rectB.top && centerX > rectB.left && centerX < rectB.right){
+          // caught
+          h.el.remove(); hearts.splice(i,1); addScore(1); createPopFX(centerX - rectG.left, centerY - rectG.top);
+          continue;
+        }
+        // missed (fell below)
+        if(h.y > gameEl.clientHeight + 40){
+          h.el.remove(); hearts.splice(i,1); loseLife();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function addScore(n){
+  score += n;
+  scoreEl.textContent = score;
+
+  // проигрываем милый звук мяу
+  meowSound.currentTime = 0;
+  meowSound.play();
+
+  if(score >= TARGET) win();
+}
+
+    function loseLife(){ lives--; livesEl.textContent = lives; if(lives<=0) gameOver(); }
+
+    function win(){ running=false; clearTimeout(spawnTimer); // remove hearts
+      hearts.forEach(h=>{ if(h.el.parentNode) h.el.parentNode.removeChild(h.el); }); hearts=[];
+      // show modal
+      winModal.classList.add('show');
+      // little fireworks on modal show
+      smallFireworkBurst();
+    }
+    function gameOver(){ running=false; clearTimeout(spawnTimer); // show simple lost modal or reset
+      alert('Игра окончена — попытайся снова!'); reset(); }
+
+    function reset(){ running=false; clearTimeout(spawnTimer); hearts.forEach(h=>{ if(h.el.parentNode) h.el.parentNode.removeChild(h.el); }); hearts=[]; score=0; lives=START_LIVES; scoreEl.textContent=score; livesEl.textContent=lives; winModal.classList.remove('show'); }
+
+    startBtn.addEventListener('click', ()=>{ if(running) return; reset(); running=true; spawnLoop(); step(); });
+    restartBtn.addEventListener('click', reset);
+    closeWin.addEventListener('click', ()=>{ winModal.classList.remove('show'); });
+
+    // pop fx when caught
+    let pops = [];
+    function createPopFX(x,y){ pops.push({x,y,life:18}); }
+    function drawFX(){ ctx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
+      pops.forEach((p,i)=>{
+        p.life--; ctx.globalAlpha = p.life/18;
+        ctx.font = '18px serif'; ctx.fillText('❤', p.x - 8, p.y + 6);
+        if(p.life<=0) pops.splice(i,1);
+      }); ctx.globalAlpha=1; requestAnimationFrame(drawFX);
+    }
+    drawFX();
+
+    // small fireworks when modal opens
+    function smallFireworkBurst(){ const rect = gameEl.getBoundingClientRect(); const cx = rect.width/2; const cy = rect.height/3; startConfetti(cx,cy,40); }
+
+    // confetti/heart fireworks used by secret
+    function startConfetti(x,y,count=80){
+      const c = document.createElement('canvas'); c.style.cssText='position:fixed;left:0;top:0;z-index:1400;pointer-events:none'; document.body.appendChild(c);
+      c.width = innerWidth; c.height = innerHeight; const cctx = c.getContext('2d');
+      const pieces=[]; const colors=['#ff2d6f','#ff6b9a','#ffb3d0','#ffd4e8'];
+      for(let i=0;i<count;i++){ const a = Math.random()*Math.PI*2; const s = 4+Math.random()*12; pieces.push({x,y,vx:Math.cos(a)*(2+Math.random()*6), vy:Math.sin(a)*(2+Math.random()*6), s, col:colors[Math.floor(Math.random()*colors.length)], life:120}); }
+      function draw(){ cctx.clearRect(0,0,c.width,c.height); pieces.forEach((p,idx)=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.life--; cctx.save(); cctx.translate(p.x,p.y); cctx.font = p.s+'px serif'; cctx.fillText('❤', -p.s/2, p.s/2); cctx.restore(); if(p.life<=0) pieces.splice(idx,1); }); if(pieces.length) requestAnimationFrame(draw); else setTimeout(()=>c.remove(),300); }
+      draw();
+    }
+
+    // secret button action
+    pressHeart.addEventListener('click', ()=>{
+      // animate pulse and open secret overlay + big confetti
+      pressHeart.classList.remove('pulse');
+      secretOverlay.style.display='flex';
+      startConfetti(window.innerWidth/2, window.innerHeight/3, 140);
+      setTimeout(()=>{ secretOverlay.style.display='none'; pressHeart.classList.add('pulse'); }, 6000);
+    });
+
+    // ensure basket resizes when layout changes
+    window.addEventListener('resize', ()=>{ setBasketX(parseFloat(basket.style.left || gameEl.clientWidth/2)); });
+
+    // accessibility: allow clicking big heart with Enter
+    pressHeart.addEventListener('keydown',(e)=>{ if(e.key==='Enter') pressHeart.click(); });
+
+    // initial reset
+    reset();
+  </script>
+</body>
+</html>
 # Gradle files
 .gradle/
 build/
